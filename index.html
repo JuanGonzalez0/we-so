@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat</title>
+</head>
+<body>
+    <h1>WebSocket Chat</h1>
+    <input id="messageInput" type="text" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send</button>
+    <ul id="messages"></ul>
+
+    <script>
+        // Reemplaza la URL aquí con tu URL de ngrok
+        const ws = new WebSocket('wss://url:3000');
+
+        ws.onopen = () => {
+            console.log('Connected to WebSocket server');
+        };
+
+        ws.onmessage = (event) => {
+            const messages = document.getElementById('messages');
+            const messageElement = document.createElement('li');
+            
+            // Verifica el tipo de datos recibido
+            if (event.data instanceof Blob) {
+                // Si es un Blob, usa FileReader para leerlo como texto
+                const reader = new FileReader();
+                reader.onload = () => {
+                    messageElement.textContent = reader.result;
+                    messages.appendChild(messageElement);
+                };
+                reader.readAsText(event.data);
+            } else {
+                // Si no es un Blob, trata el dato como texto
+                messageElement.textContent = event.data;
+                messages.appendChild(messageElement);
+            }
+        };
+
+        ws.onclose = () => {
+            console.log('Disconnected from WebSocket server');
+        };
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value;
+            ws.send(message);
+            input.value = '';
+        }
+    </script>
+</body>
+</html>
