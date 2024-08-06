@@ -1,24 +1,19 @@
 const http = require('http');
 const fs = require('fs');
 const WebSocket = require('ws');
+const express = require('express');
+const multer = require('multer');
+const path = require('path');
 
-// Servir la página HTML
-const server = http.createServer((req, res) => {
-    if (req.method === 'GET' && req.url === '/') {
-        fs.readFile('index.html', (err, data) => {
-            if (err) {
-                res.writeHead(500);
-                res.end('Error loading index.html');
-                return;
-            }
-            res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end(data);
-        });
-    } else {
-        res.writeHead(404);
-        res.end();
-    }
-});
+
+const app = express();
+
+// Servir archivos estáticos desde el directorio 'public'
+app.use(express.static('public'));
+
+
+// Crear servidor HTTP utilizando express
+const server = http.createServer(app);
 
 // Crear servidor WebSocket y vincularlo al servidor HTTP
 const wss = new WebSocket.Server({ server });
@@ -28,7 +23,6 @@ wss.on('connection', (ws) => {
 
     ws.on('message', (message) => {
         console.log(`Received: ${message}`);
-        // Enviar de vuelta el mensaje a todos los clientes conectados
         wss.clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(message);
@@ -41,6 +35,48 @@ wss.on('connection', (ws) => {
     });
 
     ws.send('Welcome to the WebSocket server!');
+});
+
+// Redirigir a subirArchivo.html (opcional, si necesitas una ruta específica)
+app.get('/subir', (req, res) => {
+    res.redirect('/subirArchivos.html');
+});
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+      cb(null, file.originalname);
+    }
+  });
+
+const upload = multer({ storage: storage });
+
+// Middleware para servir archivos estáticos
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Ruta para subir archivos
+app.post('/upload', upload.single('file'), (req, res) => {
+  res.send('Archivo subido exitosamente');
+});
+
+// Ruta para listar y descargar archivos
+app.get('/files', (req, res) => {
+  fs.readdir(path.join(__dirname, 'uploads'), (err, files) => {
+    if (err) {
+      return res.status(500).send('Error al leer la carpeta de archivos');
+    }
+
+    let fileListHtml = '<h1>Archivos disponibles para descargar</h1><ul>';
+    files.forEach(file => {
+      fileListHtml += `<li><a href="/uploads/${file}" download>${file}</a></li>`;
+    });
+    fileListHtml += '</ul>';
+    let volver = '<h2><a href=/index.html>volver a la pagina principal</a></>';
+    res.send(fileListHtml + volver);
+  });
 });
 
 // Iniciar el servidor en el puerto 3000
