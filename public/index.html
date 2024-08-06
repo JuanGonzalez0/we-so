@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebSocket Chat</title>
+    <title>Document</title>
 </head>
 <body>
 
@@ -14,7 +15,7 @@
     <ul id="messages"></ul>
     
     <script>
-        const ws = new WebSocket('wss://c8f5-2800-810-544-9a6e-1005-66d1-ef45-6f7a.ngrok-free.app');
+        const ws = new WebSocket('wss://0ce8-45-237-52-41.ngrok-free.app');
     
         ws.onopen = () => {
             console.log('Connected to WebSocket server');
@@ -51,5 +52,7 @@
         }
     </script>
     <a href="/subirArchivos.html">Subir un archivo</a>
+    <p>
+    <a href="/salas.html">ir a salas</a>
 </body>
 </html>

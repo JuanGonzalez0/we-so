@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat</title>
+</head>
+<body>
+  <h1>Chat Rooms</h1>
+  <button onclick="joinRoom('deportes')">Join Deportes</button>
+  <button onclick="joinRoom('juegos')">Join Juegos</button>
+  <button onclick="joinRoom('cocina')">Join Cocina</button>
+  <br><br>
+  <textarea id="chat" rows="10" cols="30" readonly></textarea>
+  <br>
+  <input type="text" id="nombre" placeholder="escriba su nombre">
+  <input type="text" id="message" placeholder="Type a message">
+  <button onclick="sendMessage()">Send</button>
+
+  <script>
+    const ws = new WebSocket('wss://0ce8-45-237-52-41.ngrok-free.app');
+    const chat = document.getElementById('chat');
+    const messageInput = document.getElementById('message');
+    let currentRoom = null;
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'message') {
+        chat.value += data.text + '\n';
+      } else if (data.type === 'error') {
+        alert(data.text);
+      }
+    };
+
+    function joinRoom(room) {
+      if (room) {
+        ws.send(JSON.stringify({ type: 'join', room }));
+        currentRoom = room;
+        chat.value += `Joined room: ${room}\n`;
+      }
+    }
+
+    function sendMessage() {
+      const message = messageInput.value;
+      const nomb = document.getElementById('nombre');
+      const nombre = nomb.value;
+      if (message && currentRoom) {
+        ws.send(JSON.stringify({ type: 'message', text: nombre +": "+message}));
+        chat.value +=nombre + `: ${message}\n`;
+        messageInput.value = '';
+        
+      }
+    }
+  </script>
+  <p>
+  <a href="/index.html">volver al chat general</a>
+</body>
+</html>

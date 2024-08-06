@@ -4,6 +4,7 @@ const WebSocket = require('ws');
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const ejs = require('ejs')
 
 
 const app = express();
@@ -59,7 +60,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Ruta para subir archivos
 app.post('/upload', upload.single('file'), (req, res) => {
-  res.send('Archivo subido exitosamente');
+  let volver = '<h2><a href=/index.html>volver a la pagina principal</a></>';
+  res.send('Archivo subido exitosamente' + volver);
 });
 
 // Ruta para listar y descargar archivos
@@ -76,6 +78,61 @@ app.get('/files', (req, res) => {
     fileListHtml += '</ul>';
     let volver = '<h2><a href=/index.html>volver a la pagina principal</a></>';
     res.send(fileListHtml + volver);
+  });
+});
+
+app.get('/salas', (req, res) => {
+  res.redirect('/salas.html');
+});
+
+const rooms = {
+  deportes: new Set(),
+  juegos: new Set(),
+  cocina: new Set(),
+};
+
+wss.on('connection', (ws) => {
+  let currentRoom = null;
+
+  ws.on('message', (message) => {
+    const msg = JSON.parse(message);
+
+
+    if (msg.type === 'join') {
+      const room = msg.room;
+      if (rooms[room]) {
+        if (currentRoom) {
+          rooms[currentRoom].delete(ws);
+        }
+        rooms[room].add(ws);
+        currentRoom = room;
+
+        rooms[room].forEach(client => {
+          if (client !== ws) {
+            client.send(JSON.stringify({ type: 'message', text: `A new user has joined the ${room} room.` }));
+          }
+        });
+      } else {
+        ws.send(JSON.stringify({ type: 'error', text: 'Room does not exist' }));
+      }
+    } else if (msg.type === 'message') {
+      if (currentRoom) {
+        rooms[currentRoom].forEach(client => {
+          if (client !== ws) {
+            client.send(JSON.stringify({ type: 'message', text: msg.text }));
+          }
+        });
+      }
+    }
+  });
+
+  ws.on('close', () => {
+    if (currentRoom && rooms[currentRoom]) {
+      rooms[currentRoom].delete(ws);
+      if (rooms[currentRoom].size === 0) {
+        delete rooms[currentRoom];
+      }
+    }
   });
 });
 
