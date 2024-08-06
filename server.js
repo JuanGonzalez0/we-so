@@ -6,8 +6,25 @@ const multer = require('multer');
 const path = require('path');
 const ejs = require('ejs')
 
-
 const app = express();
+
+
+app.set("view engine", "ejs");
+app.set("views", __dirname + "/views");
+
+app.get("/", (req, res) => {
+  res.render("index", { titulo: "inicio EJS" });
+});
+
+app.get("/nosotros", (req, res) => {
+  res.render("nosotros", { titulo: "Nosotros EJS" });
+});
+
+app.use((req, res, next) => {
+  res.status(404).render("404", { titulo: "Página 404" });
+});
+
+
 
 // Servir archivos estáticos desde el directorio 'public'
 app.use(express.static('public'));
