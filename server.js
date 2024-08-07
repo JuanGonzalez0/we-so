@@ -37,7 +37,7 @@ wss.on('connection', (ws) => {
         console.log('Client disconnected');
     });
 
-    ws.send('Welcome to the WebSocket server!');
+    ws.send(JSON.stringify({ type: 'message', message: 'Welcome to the WebSocket server!' }));
 });
 
 app.get("/subirArchivos", (req, res) => {
@@ -81,47 +81,38 @@ app.get('/files', (req, res) => {
   });
 });
 
-app.get("/salas", (req, res) => {
-  res.render("salas");
-});
-
-/*
-
 const rooms = {
-  deportes: new Set(),
-  juegos: new Set(),
-  cocina: new Set(),
+  'sala1': [],
+  'sala2': [],
+  'sala3': []
 };
 
+app.get("/salas", (req, res) => {
+  res.render("salas", { rooms: rooms });
+});
+
 wss.on('connection', (ws) => {
-  let currentRoom = null;
+  console.log('New client connected');
 
   ws.on('message', (message) => {
-    const msg = JSON.parse(message);
-
-
-    if (msg.type === 'join') {
-      const room = msg.room;
-      if (rooms[room]) {
-        if (currentRoom) {
-          rooms[currentRoom].delete(ws);
-        }
-        rooms[room].add(ws);
-        currentRoom = room;
-
-        rooms[room].forEach(client => {
-          if (client !== ws) {
-            client.send(JSON.stringify({ type: 'message', text: `A new user has joined the ${room} room.` }));
-          }
-        });
+    console.log(typeof message);
+    message = message.toString();
+    const parts = message.split(' ');
+    if (parts[0] === 'join') {
+      const roomName = parts[1];
+      if (rooms[roomName]) {
+        rooms[roomName].push(ws);
+        console.log(`Client joined room ${roomName}`);
       } else {
-        ws.send(JSON.stringify({ type: 'error', text: 'Room does not exist' }));
+        console.log(`Room ${roomName} does not exist`);
       }
-    } else if (msg.type === 'message') {
-      if (currentRoom) {
-        rooms[currentRoom].forEach(client => {
-          if (client !== ws) {
-            client.send(JSON.stringify({ type: 'message', text: msg.text }));
+    } else if (parts[0] === 'message') {
+      const roomName = parts[1];
+      const message = parts.slice(2).join(' ');
+      if (rooms[roomName]) {
+        rooms[roomName].forEach(client => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(message.toString());
           }
         });
       }
@@ -129,16 +120,9 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
-    if (currentRoom && rooms[currentRoom]) {
-      rooms[currentRoom].delete(ws);
-      if (rooms[currentRoom].size === 0) {
-        delete rooms[currentRoom];
-      }
-    }
+    console.log('Client disconnected');
   });
 });
-
-*/
 
 // Iniciar el servidor en el puerto 3000
 server.listen(3000, () => {
