@@ -1,5 +1,58 @@
-<%- include('template/cabecera', {tituloweb: 'Inicio EJS'}); %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
 
-<h1>Hola a EJS <%= titulo %></h1>
-
-<%- include('template/footer'); %>
+    <h1>WebSocket Chat</h1>
+    <input type="text" id="nombre" placeholder="escribe tu nombre">
+    <input id="messageInput" type="text" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send</button>
+    <ul id="messages"></ul>
+    
+    <script>
+        const ws = new WebSocket('wss://e99c-45-237-52-41.ngrok-free.app ');
+    
+        ws.onopen = () => {
+            console.log('Connected to WebSocket server');
+        };
+    
+        ws.onmessage = (event) => {
+            const messages = document.getElementById('messages');
+            const messageElement = document.createElement('li');
+                
+            if (event.data instanceof Blob) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    messageElement.textContent = reader.result;
+                    messages.appendChild(messageElement);
+                };
+                reader.readAsText(event.data);
+            } else {
+                messageElement.textContent = event.data;
+                messages.appendChild(messageElement);
+            }
+        };
+    
+        ws.onclose = () => {
+            console.log('Disconnected from WebSocket server');
+        };
+    
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const nomb = document.getElementById('nombre');
+            const message = input.value;
+            const nombre = nomb.value;
+            ws.send(nombre + ": " + message);
+            input.value = '';
+        }
+    </script>
+    <a href="/subirArchivos">Subir un archivo</a>
+    <p>
+    <a href="/salas">ir a salas</a>
+</body>
+</html>

@@ -8,27 +8,12 @@ const ejs = require('ejs')
 
 const app = express();
 
-
 app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
 
 app.get("/", (req, res) => {
-  res.render("index", { titulo: "inicio EJS" });
+  res.render("index");
 });
-
-app.get("/nosotros", (req, res) => {
-  res.render("nosotros", { titulo: "Nosotros EJS" });
-});
-
-app.use((req, res, next) => {
-  res.status(404).render("404", { titulo: "Página 404" });
-});
-
-
-
-// Servir archivos estáticos desde el directorio 'public'
-app.use(express.static('public'));
-
 
 // Crear servidor HTTP utilizando express
 const server = http.createServer(app);
@@ -55,9 +40,8 @@ wss.on('connection', (ws) => {
     ws.send('Welcome to the WebSocket server!');
 });
 
-// Redirigir a subirArchivo.html (opcional, si necesitas una ruta específica)
-app.get('/subir', (req, res) => {
-    res.redirect('/subirArchivos.html');
+app.get("/subirArchivos", (req, res) => {
+  res.render("subirArchivos");
 });
 
 const storage = multer.diskStorage({
@@ -71,13 +55,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Middleware para servir archivos estáticos
-app.use(express.static(path.join(__dirname, 'public')));
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Ruta para subir archivos
 app.post('/upload', upload.single('file'), (req, res) => {
-  let volver = '<h2><a href=/index.html>volver a la pagina principal</a></>';
+  let volver = '<h2><a href="/">volver a la pagina principal</a></>';
   res.send('Archivo subido exitosamente' + volver);
 });
 
@@ -93,14 +76,16 @@ app.get('/files', (req, res) => {
       fileListHtml += `<li><a href="/uploads/${file}" download>${file}</a></li>`;
     });
     fileListHtml += '</ul>';
-    let volver = '<h2><a href=/index.html>volver a la pagina principal</a></>';
+    let volver = '<h2><a href="/">volver a la pagina principal</a></>';
     res.send(fileListHtml + volver);
   });
 });
 
-app.get('/salas', (req, res) => {
-  res.redirect('/salas.html');
+app.get("/salas", (req, res) => {
+  res.render("salas");
 });
+
+/*
 
 const rooms = {
   deportes: new Set(),
@@ -152,6 +137,8 @@ wss.on('connection', (ws) => {
     }
   });
 });
+
+*/
 
 // Iniciar el servidor en el puerto 3000
 server.listen(3000, () => {
