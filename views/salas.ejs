@@ -5,54 +5,52 @@
   <title>Chat</title>
 </head>
 <body>
-  <h1>Salas</h1>
+<!-- Formulario para unirse a una sala -->
+<form id="join-room-form">
+  <label for="room-name">Seleccione la sala:</label>
+  <select id="room-name" name="room-name">
+    <option value="sala1">Sala 1</option>
+    <option value="sala2">Sala 2</option>
+    <option value="sala3">Sala 3</option>
+  </select>
+  <button type="submit">Unirse a la sala</button>
+</form>
 
-  <ul id="room-list">
-    <% for (const room in rooms) { %>
-      <li><%= room %></li>
-    <% } %>
-  </ul>
-  
-  <!-- Formulario para unirse a una sala -->
-  <form id="join-room-form">
-    <label for="room-name">Nombre de la sala:</label>
-    <input type="text" id="room-name" name="room-name">
-    <button type="submit">Unirse a la sala</button>
-  </form>
-  
-  <!-- Formulario para enviar mensajes a la sala -->
-  <form id="send-message-form">
-    <label for="message">Mensaje:</label>
-    <input type="text" id="message" name="message">
-    <button type="submit">Enviar mensaje</button>
-  </form>
-  
-  <!-- Div para mostrar los mensajes de la sala -->
-  <div id="messages"></div>
-  
-  <script>
-    const socket = new WebSocket('wss://');
-  
-    socket.onmessage = (event) => {
-      const message = event.data;
-      const messagesDiv = document.getElementById('messages');
-      const messageElement = document.createElement('p');
-      messageElement.textContent = message;
-      messagesDiv.appendChild(messageElement);
-    };
-  
-    document.getElementById('join-room-form').addEventListener('submit', (event) => {
-      event.preventDefault();
-      const roomName = document.getElementById('room-name').value;
-      socket.send(`join ${roomName}`);
-    });
-  
-    document.getElementById('send-message-form').addEventListener('submit', (event) => {
-      event.preventDefault();
-      const message = document.getElementById('message').value;
-      const roomName = document.getElementById('room-name').value;
-      socket.send(`message ${roomName.toString()} ${message}`);
-    });
-  </script>
+<!-- Formulario para enviar mensajes -->
+<form id="send-message-form">
+  <label for="message">Mensaje:</label>
+  <input type="text" id="message" name="message">
+  <button type="submit">Enviar mensaje</button>
+</form>
+
+<!-- Div para mostrar los mensajes -->
+<div id="messages"></div>
+
+<script>
+  const socket = new WebSocket('wss://0c72-2800-810-544-20-61d4-5680-6086-5197.ngrok-free.app');
+
+  // Unirse a una sala
+  document.getElementById('join-room-form').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const roomName = document.getElementById('room-name').value;
+    socket.send(`join ${roomName}`);
+  });
+
+  // Enviar mensaje
+  document.getElementById('send-message-form').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const message = document.getElementById('message').value;
+    socket.send(`message ${message}`);
+  });
+
+  // Mostrar mensajes recibidos
+  socket.onmessage = (event) => {
+    const message = event.data;
+    console.log(message);
+    const messageElement = document.createElement('p');
+    messageElement.textContent = message;
+    document.getElementById('messages').appendChild(messageElement);
+  };
+</script>
 </body>
 </html>

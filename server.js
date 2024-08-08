@@ -37,7 +37,7 @@ wss.on('connection', (ws) => {
         console.log('Client disconnected');
     });
 
-    ws.send(JSON.stringify({ type: 'message', message: 'Welcome to the WebSocket server!' }));
+    ws.send('Welcome to the WebSocket server!');
 });
 
 app.get("/subirArchivos", (req, res) => {
@@ -92,35 +92,29 @@ app.get("/salas", (req, res) => {
 });
 
 wss.on('connection', (ws) => {
-  console.log('New client connected');
+  let userRoom;
 
   ws.on('message', (message) => {
-    console.log(typeof message);
-    message = message.toString();
-    const parts = message.split(' ');
-    if (parts[0] === 'join') {
-      const roomName = parts[1];
-      if (rooms[roomName]) {
-        rooms[roomName].push(ws);
-        console.log(`Client joined room ${roomName}`);
-      } else {
-        console.log(`Room ${roomName} does not exist`);
-      }
-    } else if (parts[0] === 'message') {
-      const roomName = parts[1];
-      const message = parts.slice(2).join(' ');
-      if (rooms[roomName]) {
-        rooms[roomName].forEach(client => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(message.toString());
-          }
-        });
-      }
+    message = message.toString(); // Convertir el mensaje a cadena de texto
+
+    if (message.startsWith('join')) {
+      userRoom = message.split(' ')[1];
+      rooms[userRoom].push(ws);
+      console.log(`Cliente unido a la sala ${userRoom}`);
+    } else if (message.startsWith('message')) {
+      const messageContent = message.split(' ')[1];
+      rooms[userRoom].forEach((client) => {
+        if (client.readyState === WebSocket.OPEN && client !== ws) {
+          client.send(messageContent);
+        }
+      });
     }
   });
 
   ws.on('close', () => {
-    console.log('Client disconnected');
+    if (userRoom) {
+      rooms[userRoom] = rooms[userRoom].filter((client) => client !== ws);
+    }
   });
 });
 
